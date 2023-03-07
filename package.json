@@ -12,7 +12,7 @@
   "commands": [
     {
       "name": "viewNodeTopics",
-      "title": "View Node Topics",
+      "title": "View Topics By Node",
       "subtitle": "V2EX",
       "description": "View the topics of the specified node",
       "mode": "view"
@@ -21,7 +21,14 @@
       "name": "viewNotifications",
       "title": "View Notifications",
       "subtitle": "V2EX",
-      "description": "View the latest notifications.",
+      "description": "View the latest notifications",
+      "mode": "view"
+    },
+    {
+      "name": "viewToken",
+      "title": "View Token",
+      "subtitle": "V2EX",
+      "description": "View the currently used tokens",
       "mode": "view"
     }
   ],
@@ -36,20 +43,18 @@
     },
     {
       "name": "nodes",
-      "description": "The nodes you want to visit, separated by ,",
+      "description": "The nodes you want to visit",
       "type": "textfield",
       "required": true,
-      "default": "programmer,apple,share,qna,ideas",
+      "default": "programmer create share ideas apple jobs all4all qna",
       "title": "Nodes",
-      "placeholder": "e.g. programmer,apple,share,qna,ideas"
+      "placeholder": "Please enter the nodes you want to visit"
     }
   ],
   "dependencies": {
     "@raycast/api": "^1.39.2",
     "@raycast/utils": "^1.3.1",
-    "axios": "^0.27.2",
-    "dayjs": "^1.11.5",
-    "immer": "^9.0.15"
+    "dayjs": "^1.11.5"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.0.0",

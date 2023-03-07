@@ -14,7 +14,7 @@ export const showSuccessfulToast = async (options?: Partial<Omit<Toast.Options, 
     ...options,
   });
 };
-export const showFailedToast = async (options?: Omit<Toast.Options, "style">) => {
+export const showFailedToast = async (options?: Partial<Omit<Toast.Options, "style">>) => {
   await showToast({
     style: Toast.Style.Failure,
     title: "Failed",

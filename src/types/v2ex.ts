@@ -3,7 +3,6 @@ export type Response<T> = {
   message: string;
   result?: T;
 };
-// ✅
 export interface Topic {
   id: number;
   title: string;
@@ -16,10 +15,9 @@ export interface Topic {
   created: number;
   last_modified: number;
   last_touched: number;
-  member: Member;
-  node: Node;
+  member?: Member;
+  node?: Node;
 }
-// ✅
 export interface Node {
   id: number;
   url: string;
@@ -32,7 +30,6 @@ export interface Node {
   created: number;
   last_modified: number;
 }
-// ✅
 export interface Member {
   id: number;
   username: string;
@@ -43,7 +40,6 @@ export interface Member {
   avatar: string;
   created: number;
 }
-// ✅
 export interface Reply {
   id: number;
   content: string;
@@ -51,7 +47,6 @@ export interface Reply {
   created: number;
   member: Member;
 }
-// ✅
 export interface Token {
   token: string;
   scope: Scope;
@@ -61,7 +56,6 @@ export interface Token {
   last_used: number;
   created: number;
 }
-// ✅
 export interface Notification {
   id: number;
   member_id: number;
@@ -77,7 +71,7 @@ export enum Scope {
   regular,
 }
 
-export enum TopicSource {
-  "Hot" = "hot",
-  "Latest" = "latest",
-}
+export type CachedResponse<T> = {
+  expiration: number;
+  data: Response<T>;
+};

@@ -1,58 +1,67 @@
-import { Action, ActionPanel, List } from "@raycast/api";
-import { useCachedState } from "@raycast/utils";
-import { useNode, useNodeTopics } from "./api/hooks";
-import TopicDetail from "./components/TopicDetail";
-import { getNodes } from "./utils/preference";
-import { useEffect, useRef } from "react";
-import { getUnixFromNow } from "./utils/time";
+import { Action, ActionPanel, Icon, List } from "@raycast/api";
+import { useFetch } from "@raycast/utils";
+import TopicDetail from "@/components/TopicDetail";
+import { getUnixFromNow } from "@/utils/time";
+import { NodeSelect } from "@/components/NodeSelect";
+import { Topic, Response } from "@/types/v2ex";
+import { getNodes, getToken } from "@/utils/preference";
+import { useState } from "react";
+import { showFailedToast, showLoadingToast, showSuccessfulToast } from "@/utils/toast";
 export default function Command() {
+  const token = getToken();
   const nodes = getNodes();
 
-  const [showDetails, setShowDetails] = useCachedState("topic-show-details", false);
-  const [nodeName, setNodeName] = useCachedState("selected-node-name", nodes[0]);
-
-  const node = useNode(nodeName);
-  const topics = useNodeTopics(nodeName);
+  const [node, setNode] = useState<string>();
+  const topics = useFetch<Response<Topic[]>>(`https://www.v2ex.com/api/v2/nodes/${node}/topics`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    execute: !!node && !!token,
+    keepPreviousData: true,
+    onWillExecute: () => {
+      showLoadingToast({ message: `/nodes/${node}/topics` });
+    },
+    onError: (error) => {
+      showFailedToast({ message: error.message || "" });
+    },
+    onData: (data) => {
+      showSuccessfulToast({ message: data.message || "" });
+    },
+  });
+  const [showDetails, setShowDetails] = useState(false);
   return (
     <List
       isShowingDetail={showDetails}
       searchBarAccessory={
-        <List.Dropdown
-          tooltip="Select Node"
-          value={nodeName}
-          defaultValue={nodeName}
-          onChange={(n) => {
-            setNodeName(n);
+        <NodeSelect
+          nodes={nodes}
+          onNodeChange={(node) => {
+            setNode(node);
           }}
-        >
-          <List.Dropdown.Section title="Node">
-            {nodes.map((node) => {
-              return <List.Dropdown.Item key={node} title={node.toUpperCase()} value={node} />;
-            })}
-          </List.Dropdown.Section>
-        </List.Dropdown>
-      }
-    >
-      {topics.data?.map((topic) => (
-        <List.Item
-          actions={
-            <ActionPanel>
-              <Action
-                title={showDetails ? "Hide Details" : "Show Details"}
-                onAction={() => setShowDetails((x) => !x)}
-              />
-              <Action.OpenInBrowser url={topic.url} />
-            </ActionPanel>
-          }
-          subtitle={{ value: !showDetails ? getUnixFromNow(topic.last_touched) : null, tooltip: "Last touched" }}
-          key={topic.id}
-          title={topic.title}
-          id={String(topic.id)}
-          icon={node.data?.avatar}
-          accessories={[{ tag: String(topic.replies), tooltip: "Replies" }]}
-          detail={<TopicDetail topic={topic} />}
         />
-      ))}
+      }
+      isLoading={topics.isLoading}
+    >
+      {topics.data?.result &&
+        topics.data.result.map((topic) => (
+          <List.Item
+            key={topic.id}
+            title={topic.title}
+            subtitle={{ value: !showDetails ? getUnixFromNow(topic.last_touched) : null, tooltip: "Last touched" }}
+            accessories={[{ tag: String(topic.replies), tooltip: "Replies" }]}
+            detail={<TopicDetail topic={showDetails ? topic : undefined} />}
+            actions={
+              <ActionPanel>
+                <Action
+                  icon={showDetails ? Icon.EyeDisabled : Icon.Eye}
+                  title={showDetails ? "Hide Details" : "Show Details"}
+                  onAction={() => setShowDetails((x) => !x)}
+                />
+                <Action.OpenInBrowser url={topic.url} />
+              </ActionPanel>
+            }
+          />
+        ))}
     </List>
   );
 }

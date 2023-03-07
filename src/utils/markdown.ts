@@ -1,55 +1,60 @@
-import { Topic, Reply, Member, Node } from "../api/types";
+import { Reply, Member, Node } from "@/types/v2ex";
 import { getUnixFromNow } from "./time";
 
-const SEPARATOR = `\n\n------\n\n`;
-const LINE_BREAK = `\n\n`;
 const Code = (content: string) => `\`${content}\``;
 const Bold = (content: string) => `**${content}**`;
 const Link = (title: string, url: string) => `[${title}](${url})`;
-const LOADING = Code("Loading...");
+const Quote = (content: string) => `> ${content}`;
 const Heading = (level: number, content: string) => {
   level = Math.max(1, Math.min(6, level));
   return `${"#".repeat(level)} ${content}`;
 };
-
 const OP = (isOP: boolean) => {
   return isOP ? ` ${Code("OP")} ` : "";
 };
+const SEPARATOR = `\n\n------\n\n`;
+const LINE_BREAK = `\n\n`;
+const LOADING = Code("Loading...");
 
-const getTopicMarkdownContent = (data: {
-  topic: Omit<Topic, "member" | "node">;
+export const getTopicMarkdown = ({
+  member,
+  node,
+  replies,
+  title,
+  content,
+  created,
+}: {
   member?: Member;
   node?: Node;
-  replies: Reply[];
+  replies?: Reply[];
+  title: string;
+  content: string;
+  created: number;
 }) => {
-  const { topic, member, node, replies } = data;
-  const topicTitle = `${Heading(1, topic.title)}`;
+  const topicTitle = `${Heading(1, title)}`;
 
-  const topicMember =
-    node &&
-    member &&
-    `${Code(node.title)} · ${Bold(Link(member.username, member.url))} · ${getUnixFromNow(topic.created)}`;
+  const topicNode = node && `${Code(node.title)}`;
+  const topicMember = member && `${Bold(Link(member.username, member.url))}`;
+  const topicCreated = `${getUnixFromNow(created)}`;
+  const topicInfo = [topicNode, topicMember, topicCreated].filter((item) => item).join(" · ");
 
-  const topicHeader = `${topicTitle}${LINE_BREAK}${topicMember}`;
+  const topicContent = !content ? SEPARATOR : `${SEPARATOR}${content}${SEPARATOR}`;
 
-  const topicContent = `${topic.content}`;
+  const topicReplies = replies
+    ? replies.length === 0
+      ? Quote("No Comments Yet")
+      : replies.map((reply) => getReplyMarkdown(reply, { isOP: member?.id === reply.member.id })).join(LINE_BREAK)
+    : LOADING;
 
-  const repliesContent =
-    replies.length > 0
-      ? replies
-          .map((reply) => getReplyMarkdownContent(reply, member ? member.id === reply.member.id : false))
-          .join(LINE_BREAK)
-      : "> No Comments Yet";
-
-  return [topicHeader, topicContent, repliesContent].join(SEPARATOR);
+  return [topicTitle, topicInfo, topicContent, topicReplies].join(LINE_BREAK);
 };
 
-const getReplyMarkdownContent = (reply: Reply, isOP = false) => {
-  const replyMember = `${Bold(Link(reply.member.username, reply.member.url))} ${OP(isOP)} ${getUnixFromNow(
-    reply.created
-  )}`;
+const getReplyMarkdown = (reply: Reply, options: { isOP: boolean }) => {
+  const replyMember = `${Link(reply.member.username, reply.member.url)} ${OP(options.isOP)}`;
+  const replyCreate = `${getUnixFromNow(reply.created)}`;
+  const replyInfo = [replyMember, replyCreate].filter((item) => item).join(" ");
+
   const replyContent = `${reply.content}`;
-  return `${replyMember}${LINE_BREAK}${replyContent}`;
-};
 
-export { getTopicMarkdownContent, getReplyMarkdownContent };
+  return [replyInfo, replyContent].join(LINE_BREAK);
+};

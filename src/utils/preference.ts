@@ -1,20 +1,11 @@
+import { Preferences } from "@/types/preference";
 import { getPreferenceValues } from "@raycast/api";
 
-export interface Preferences {
-  token?: string;
-  nodes: string;
-}
-const getNodes = () => {
+export const getNodes = () => {
   const { nodes } = getPreferenceValues<Preferences>();
-  return nodes.split(",");
+  return nodes.split(" ");
 };
-const getToken = () => {
+export const getToken = () => {
   const { token } = getPreferenceValues<Preferences>();
   return token;
 };
-const hasToken = () => {
-  const token = getToken();
-  return !!token;
-};
-
-export { getNodes, hasToken, getToken };
